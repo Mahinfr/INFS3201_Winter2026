@@ -1,7 +1,7 @@
 const persistence = require("./Persistence")
 
 async function getAllEmployees(){
-    return persistence.getAllEmployees
+    return persistence.getAllEmployees()
 }
 
 async function findEmployee(){
@@ -21,6 +21,10 @@ async function addAssignment(){
 }
 async function addEmployeeRecord(){
     return persistence.addEmployeeRecord()
+}
+
+async function assignShift(){
+    return persistence.assignShift
 }
 
 module.exports ={

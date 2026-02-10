@@ -98,6 +98,30 @@ async function addEmployeeRecord(emp) {
     await fs.writeFile('employees.json', JSON.stringify(employeeList, null, 4))
 }
 
+
+
+async function assignShift(empId, shiftId) {
+    // check that empId exists
+    let employee = await findEmployee(empId)
+    if (!employee) {
+        return "Employee does not exist"
+    }
+    // check that shiftId exists
+    let shift = await findShift(shiftId)
+    if (!shift) {
+        return "Shift does not exist"
+    }
+    // check that empId,shiftId doesn't exist
+    let assignment = await findAssignment(empId, shiftId)
+    if (assignment) {
+        return "Employee already assigned to shift"
+    }
+    // add empId,shiftId into the bridge
+    await addAssignment(empId, shiftId)
+    return "Ok"
+}
+
+
 module.exports = {
     getAllEmployees,
     findEmployee,
@@ -105,5 +129,6 @@ module.exports = {
     getEmployeeShifts,
     findAssignment,
     addAssignment,
-    addEmployeeRecord
+    addEmployeeRecord,
+    assignShift
 }

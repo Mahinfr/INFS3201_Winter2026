@@ -110,6 +110,22 @@ async function addEmployeeRecord(emp) {
 
 ///////////function made using LLM///////////
 
+/**
+ * Computes the duration of a work shift in hours.
+ *
+ * This function takes a start time and end time (formatted as "HH:mm"),
+ * converts them into Date objects, and calculates the difference in hours.
+ * It also handles overnight shifts where the end time is past midnight.
+ *
+ * @param {string} startTime - The shift start time in "HH:mm" format (e.g., "09:00").
+ * @param {string} endTime - The shift end time in "HH:mm" format (e.g., "17:30").
+ * @returns {number} The duration of the shift in hours (can be fractional, e.g., 2.5).
+ *
+ * @example
+ * computeShiftDuration("11:00", "13:30"); // returns 2.5
+ * computeShiftDuration("22:00", "02:00"); // returns 4
+ */
+
 function computeShiftDuration(startTime, endTime) {
     // Parse times into Date objects (using today's date as a placeholder)
     let start = new Date(`1970-01-01T${startTime}:00`);

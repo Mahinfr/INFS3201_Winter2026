@@ -4,23 +4,23 @@ const prompt = require("prompt-sync")
 /////////////Reading Data//////////////////
 async function readEmployeeData(){
     let rawData = await fs.readFile('employees.json')
-    result = JSON.parse(rawData)
+    let result = JSON.parse(rawData)
     return result
 }
 async function readShiftData(){
     let raw = await fs.readFile('shifts.json')
-    result = JSON.parse(raw)
+    let result = JSON.parse(raw)
     return result;
 }
 async function readAssignmentsData(){
-    let raw = fs.readFile('assignments.json')
-    result = JSON.parse(raw)
+    let raw = await fs.readFile('assignments.json')
+    let result = JSON.parse(raw)
     return result;
 }
 ////////////////////////////////////////////////
 
-/////CRUD Operations/////
 
+//crud
 async function getAllEmployees() {
     result = await readEmployeeData();
     return result
@@ -44,6 +44,8 @@ async function findShift(shiftId) {
     }
     return undefined
 }
+
+//crud
 async function getEmployeeShifts(empId) {
     assignmentList = await readAssignmentsData()
     let shiftIds = []
@@ -83,6 +85,7 @@ async function addAssignment(empId, shiftId) {
     await fs.writeFile('assignments.json', JSON.stringify(assignmentList, null, 4))
 }
 
+//crud
 async function addEmployeeRecord(emp) {
     let maxId = 0
     
@@ -99,7 +102,7 @@ async function addEmployeeRecord(emp) {
 }
 
 
-
+//crud
 async function assignShift(empId, shiftId) {
     // check that empId exists
     let employee = await findEmployee(empId)
@@ -124,11 +127,7 @@ async function assignShift(empId, shiftId) {
 
 module.exports = {
     getAllEmployees,
-    findEmployee,
-    findShift,
     getEmployeeShifts,
-    findAssignment,
-    addAssignment,
     addEmployeeRecord,
     assignShift
 }

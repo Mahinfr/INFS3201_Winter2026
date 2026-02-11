@@ -4,36 +4,23 @@ async function getAllEmployees(){
     return persistence.getAllEmployees()
 }
 
-async function findEmployee(){
-    return persistence.findEmployee()
-}
-async function findShift(){
-    return persistence.findShift()
-}
-async function findAssignment(){
-    return persistence.findAssignment()
-}
-async function getEmployeeShifts(){
-    return persistence.getEmployeeShifts()
-}
-async function addAssignment(){
-    return persistence.addAssignment()
-}
-async function addEmployeeRecord(){
-    return persistence.addEmployeeRecord()
+
+async function getEmployeeShifts(emp){
+    return persistence.getEmployeeShifts(emp)
 }
 
-async function assignShift(){
-    return persistence.assignShift
+async function addEmployeeRecord(emp){
+    return persistence.addEmployeeRecord(emp)
+}
+
+async function assignShift(empId,shiftId){
+    return persistence.assignShift(empId,shiftId)
 }
 
 module.exports ={
-    getAllEmployees,
-    findEmployee,
-    findShift,
-    findAssignment,
-    getEmployeeShifts,
-    addAssignment,
-    addEmployeeRecord
+    getAllEmployees,//
+    getEmployeeShifts,//
+    addEmployeeRecord,//
+    assignShift//
 
 }

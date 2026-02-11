@@ -17,10 +17,6 @@
     },
     {
         "employeeId": "E007",
-        "shiftId": "S007"
-    },
-    {
-        "employeeId": "E008",
-        "shiftId": "S002"
+        "shiftId": "S003"
     }
 ]

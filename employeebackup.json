@@ -28,10 +28,23 @@
         "name": "Mohammed",
         "phone": "1234-5678",
         "employeeId": "E006"
+    }
+]
+[
+    {
+        "employeeId": "E001",
+        "shiftId": "S001"
     },
     {
-        "name": "mahin",
-        "phone": "33722703",
-        "employeeId": "E007"
+        "employeeId": "E003",
+        "shiftId": "S004"
+    },
+    {
+        "employeeId": "E003",
+        "shiftId": "S007"
+    },
+    {
+        "employeeId": "E003",
+        "shiftId": "S008"
     }
 ]

@@ -3,24 +3,30 @@ const prompt = require("prompt-sync")
 
 /////////////Reading Data//////////////////
 async function readEmployeeData(){
-    let rawData = await fs.readFile('employees.json')
+    let rawData = await fs.readFile('employees.json','utf-8')
     let result = JSON.parse(rawData)
     return result
 }
 async function readShiftData(){
-    let raw = await fs.readFile('shifts.json')
+    let raw = await fs.readFile('shifts.json','utf-8')
     let result = JSON.parse(raw)
     return result;
 }
 async function readAssignmentsData(){
-    let raw = await fs.readFile('assignments.json')
+    let raw = await fs.readFile('assignments.json','utf-8')
+    let result = JSON.parse(raw)
+    return result;
+}
+
+async function readConfig(){
+    let raw =await fs.readFile('config.json','utf-8')
     let result = JSON.parse(raw)
     return result;
 }
 ////////////////////////////////////////////////
 
 
-//crud
+
 async function getAllEmployees() {
     result = await readEmployeeData();
     return result
@@ -45,7 +51,7 @@ async function findShift(shiftId) {
     return undefined
 }
 
-//crud
+
 async function getEmployeeShifts(empId) {
     assignmentList = await readAssignmentsData()
     let shiftIds = []
@@ -85,7 +91,7 @@ async function addAssignment(empId, shiftId) {
     await fs.writeFile('assignments.json', JSON.stringify(assignmentList, null, 4))
 }
 
-//crud
+
 async function addEmployeeRecord(emp) {
     let maxId = 0
     
@@ -102,32 +108,41 @@ async function addEmployeeRecord(emp) {
 }
 
 
-//crud
-async function assignShift(empId, shiftId) {
-    // check that empId exists
-    let employee = await findEmployee(empId)
-    if (!employee) {
-        return "Employee does not exist"
+///////////function made using LLM///////////
+
+function computeShiftDuration(startTime, endTime) {
+    // Parse times into Date objects (using today's date as a placeholder)
+    let start = new Date(`1970-01-01T${startTime}:00`);
+    let end = new Date(`1970-01-01T${endTime}:00`);
+
+    // Handle overnight shifts (end time past midnight)
+    if (end < start) {
+        end.setDate(end.getDate() + 1);
     }
-    // check that shiftId exists
-    let shift = await findShift(shiftId)
-    if (!shift) {
-        return "Shift does not exist"
-    }
-    // check that empId,shiftId doesn't exist
-    let assignment = await findAssignment(empId, shiftId)
-    if (assignment) {
-        return "Employee already assigned to shift"
-    }
-    // add empId,shiftId into the bridge
-    await addAssignment(empId, shiftId)
-    return "Ok"
+
+    // Difference in milliseconds → convert to hours
+    let diffMs = end - start;
+    let diffHours = diffMs / (1000 * 60 * 60);
+
+    return diffHours;
 }
+////////////////////////////////////////////////////
+
+
+
+
+
 
 
 module.exports = {
+    findAssignment,
+    findEmployee,
+    findShift,
     getAllEmployees,
     getEmployeeShifts,
     addEmployeeRecord,
-    assignShift
+    computeShiftDuration,
+    readConfig,
+    readShiftData,
+    addAssignment
 }

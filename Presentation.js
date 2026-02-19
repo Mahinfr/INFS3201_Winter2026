@@ -1,6 +1,9 @@
 const business = require("./Business")
 const prompt = require("prompt-sync")()
 
+/**
+ * Display the employee list in a nicely formatted table.
+ */
 async function displayEmployees() {
     let employees = await business.getAllEmployees()
     console.log('Employee ID  Name                Phone')
@@ -9,7 +12,9 @@ async function displayEmployees() {
         console.log(`${emp.employeeId.padEnd(13)}${emp.name.padEnd(20)}${emp.phone}`)
     }
 }
-
+/**
+ * The UI function for adding a new employee to the system.
+ */
 async function addNewEmployee() {
     let name = prompt('Enter employee name: ')
     let phone = prompt('Enter phone number: ')
@@ -20,6 +25,9 @@ async function addNewEmployee() {
     console.log('Employee added...')
 }
 
+/**
+ * The UI function for assigning an employee to a shift.
+ */
 async function scheduleEmployee() {
     let empId = prompt('Enter employee ID: ')
     let shiftId = prompt(' Enter shift ID: ')
@@ -31,7 +39,10 @@ async function scheduleEmployee() {
         console.log(result)
     }
 }
-
+/**
+ * A function to interact with the user and display the results of the
+ * employee schedule in a CSV like format.
+ */
 async function getEmployeeSchedule() {
     let empId = prompt('Enter employee ID: ')
     let details = await business.getEmployeeShifts(empId)
@@ -42,7 +53,10 @@ async function getEmployeeSchedule() {
     }
 }
 
-
+/**
+ * The UI function for displaying the menu and calling the various UI functions.  The function
+ * is made async because many of the called functions are also async.
+ */
 
 async function displayMenu() {
     while (true) {

@@ -56,7 +56,7 @@ async function findEmployee(empId) {
     await connection()
     let db = client.db('infs3201_winter2026')
     let employees = db.collection('employees')
-    let data = await employees.find({ employeeId: empId }).toArray()
+    let data = await employees.findOne({ employeeId: empId })
     return data
 }
 

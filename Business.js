@@ -26,6 +26,15 @@ async function addEmployeeRecord(emp){
     return persistence.addEmployeeRecord(emp)
 }
 
+/**
+ * Find a single employee given their ID number.
+ * @param {string} empId 
+ * @returns {{ employeeId: string, name: string, phone: string }|undefined}
+ */
+async function findEmployee(emp){
+    return persistence.findEmployee(emp)
+}
+
 
 
 
@@ -33,6 +42,7 @@ module.exports ={
     getAllEmployees,//
     getEmployeeShifts,//
     addEmployeeRecord,//
+    findEmployee
     
 
 }

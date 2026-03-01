@@ -24,6 +24,13 @@ app.get('/', async (req, res) => {
 app.get('/employee/:id',async(req,res)=>{
     let eid = req.params.id
     let emp = await business.findEmployee(eid)
+    let empShifts = await business.getEmployeeShifts(eid)
+    
+    console.log(empShifts)
+    res.render('employee',{employee : emp, shifts : empShifts})
+})
 
-    res.render('employee',{employee : emp})
+app.post('/edit-details/:id',async(req,res)=>{
+    let eid = req.params.id
+    res.render('edit',{})
 })

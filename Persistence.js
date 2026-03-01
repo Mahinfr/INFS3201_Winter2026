@@ -69,7 +69,7 @@ async function findShift(shiftId) {
     await connection()
     let db = client.db('infs3201_winter2026')
     let employees = db.collection('shifts')
-    let data = await employees.find({shiftId: shiftId }).toArray()
+    let data = await employees.findOne({shiftId: shiftId })
 
     return data
 }

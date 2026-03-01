@@ -34,6 +34,9 @@ async function addEmployeeRecord(emp){
 async function findEmployee(emp){
     return persistence.findEmployee(emp)
 }
+async function findShift(shiftId) {
+    return persistence.findShift(shiftId)
+}
 
 
 
@@ -42,7 +45,6 @@ module.exports ={
     getAllEmployees,//
     getEmployeeShifts,//
     addEmployeeRecord,//
-    findEmployee
-    
-
+    findEmployee,
+    findShift
 }

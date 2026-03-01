@@ -1,7 +1,32 @@
+<style>
+    table,th,td,tr{
+        border: 2px solid black;
+        border-collapse: collapse;
+    }
+</style>
+
 <h1>Employee Details</h1>
 
 <p><strong>ID:</strong> {{employee.employeeId}}</p>
 <p><strong>Name:</strong> {{employee.name}}</p>
 <p><strong>Phone:</strong> {{employee.phone}}</p>
+
+<p><a href="/edit-details/{{employee.employeeId}}">edit details</a></p>
+
+<h1>Shifts</h1>
+<table>
+    <tr>
+        <th>date</th>
+        <th>start time</th>
+        <th>end time</th>
+    </tr>
+    {{#each shifts}}
+    <tr>
+        <td>{{this.date}}</td>
+        <td>{{this.startTime}}</td>
+        <td>{{this.endTime}}</td>
+    </tr>
+    {{/each}}
+</table>
 
 <a href="/">Back</a>

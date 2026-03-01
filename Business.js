@@ -34,8 +34,34 @@ async function addEmployeeRecord(emp){
 async function findEmployee(emp){
     return persistence.findEmployee(emp)
 }
+
+/**
+ * Get a single shift given the shiftId
+ * @param {string} shiftId 
+ * @returns {{shiftId:string, date:string, startTime:string, endTime:string}|undefined}
+ */
 async function findShift(shiftId) {
     return persistence.findShift(shiftId)
+}
+
+/**
+ * Processes a list of shift objects and adds a boolean 'isMorning' property 
+ * to each based on the startTime. 
+ *
+ * @param {Array<{startTime: string, date: string, endTime: string}>} shifts 
+ * @returns {Promise<void>} This function modifies the objects in the array directly.
+ */
+async function isMorning(shifts){
+    for(let s of shifts){
+        
+        let hour = parseInt(s.startTime.split(':')[0]);
+        
+        if (hour < 12) {
+            s.isMorning = true;
+        } else {
+            s.isMorning = false;
+        }
+    }
 }
 
 
@@ -46,5 +72,6 @@ module.exports ={
     getEmployeeShifts,//
     addEmployeeRecord,//
     findEmployee,
-    findShift
+    findShift,
+    isMorning
 }

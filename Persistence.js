@@ -8,29 +8,6 @@ async function connection(){
     await client.connect()
 }
 
-/////////////Reading Data//////////////////
-async function readEmployeeData(){
-    let rawData = await fs.readFile('employees.json','utf-8')
-    let result = JSON.parse(rawData)
-    return result
-}
-async function readShiftData(){
-    let raw = await fs.readFile('shifts.json','utf-8')
-    let result = JSON.parse(raw)
-    return result;
-}
-async function readAssignmentsData(){
-    let raw = await fs.readFile('assignments.json','utf-8')
-    let result = JSON.parse(raw)
-    return result;
-}
-
-async function readConfig(){
-    let raw =await fs.readFile('config.json','utf-8')
-    let result = JSON.parse(raw)
-    return result;
-}
-////////////////////////////////////////////////
 
 /**
  * Return a list of all employees loaded from the storage.
@@ -162,6 +139,4 @@ module.exports = {
     getAllEmployees,
     getEmployeeShifts,
     addEmployeeRecord,
-    readConfig,
-    readShiftData,
 }

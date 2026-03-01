@@ -26,7 +26,8 @@ app.get('/employee/:id',async(req,res)=>{
     let emp = await business.findEmployee(eid)
     let empShifts = await business.getEmployeeShifts(eid)
     
-    console.log(empShifts)
+    business.isMorning(empShifts)
+    
     res.render('employee',{employee : emp, shifts : empShifts})
 })
 

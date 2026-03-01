@@ -1,6 +1,3 @@
-const fs = require("fs/promises")
-const prompt = require("prompt-sync")
-
 const {MongoClient} = require('mongodb')
 const client = new MongoClient('mongodb+srv://60307275:12class34@cluster0.atbir.mongodb.net/')
 
@@ -55,17 +52,14 @@ async function findShift(shiftId) {
  * @param {string} empId 
  * @returns {Array<{string}>}
  */
-
 async function getEmployeeShifts(empId) {
     await connection()
     let db = client.db('infs3201_winter2026')
     let assignments = db.collection('assignments')
     let shifts = db.collection('shifts')
 
-    // Step 1: Get assignments for this employee
     let employeeAssignments = await assignments.find({ employeeId: empId }).toArray()
 
-    // Step 2: Manually extract shiftIds 
     let shiftIds = []
     for (let a of employeeAssignments) {
         shiftIds.push(a.shiftId)
@@ -74,8 +68,6 @@ async function getEmployeeShifts(empId) {
     if (shiftIds.length === 0) {
         return []
     }
-
-    // Step 3: Get matching shifts using $in
     let shiftDetails = await shifts.find({ shiftId: { $in: shiftIds } }).toArray()
     return shiftDetails
 
@@ -132,6 +124,22 @@ async function addEmployeeRecord(emp) {
 }
 
 
+/**
+ * Updates an employee's name and phone number in the database.
+ * * @param {string|number} eid - The unique identifier of the employee to update.
+ * @param {string} newName - The new name to be assigned to the employee.
+ * @param {string|number} newPhone - The new phone number to be assigned to the employee.
+ * @returns {Promise<void>} - A promise that resolves when the update operation is complete.
+ */
+async function updateDetails(eid,newName,newPhone){
+    await connection()
+    let db = client.db('infs3201_winter2026')
+    let employees = db.collection('employees')
+    employees.updateOne({employeeId : eid}, {$set : {name : newName , phone : newPhone}})
+
+}
+
+
 module.exports = {
     findAssignment,
     findEmployee,
@@ -139,4 +147,5 @@ module.exports = {
     getAllEmployees,
     getEmployeeShifts,
     addEmployeeRecord,
+    updateDetails
 }

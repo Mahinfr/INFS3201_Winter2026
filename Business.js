@@ -44,6 +44,11 @@ async function findShift(shiftId) {
     return persistence.findShift(shiftId)
 }
 
+
+async function updateDetails(eid,newName,newPhone) {
+    return persistence.updateDetails(eid,newName,newPhone)
+}
+
 /**
  * Processes a list of shift objects and adds a boolean 'isMorning' property 
  * to each based on the startTime. 
@@ -73,5 +78,6 @@ module.exports ={
     addEmployeeRecord,//
     findEmployee,
     findShift,
-    isMorning
+    isMorning,
+    updateDetails
 }

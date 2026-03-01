@@ -1,13 +1,15 @@
-<h1>Edit detailsnode</h1>
+<h1>Edit details</h1>
 
-<form action="" method="post">
+<form action="/edit-details/{{employee.employeeId}}" method="post">
     <label for="name">
         Name:
-        <input type="text" name="name" id="id">
+        <input type="text" name="name" id="name" value="{{employee.name}}">
     </label>
+    <br>
     <label for="phone">
         Phone:
-        <input type="text" name="phone" id="phone">
+        <input type="text" name="phone" id="phone" value="{{employee.phone}}">
     </label>
-    <input type="submit" value="Confirm">
+    <br>
+    <input type="submit" value="Save">
 </form>

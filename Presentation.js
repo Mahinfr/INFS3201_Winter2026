@@ -6,6 +6,9 @@ const {engine} = require('express-handlebars')
 app = express()
 app.use(express.urlencoded({ extended: true }));
 
+const cookieParser = require('cookie-parser')
+app.use(cookieParser())
+
 app.set('views',__dirname+"/templates")
 app.set('view engine','handlebars')
 app.engine('handlebars',engine())
@@ -15,17 +18,54 @@ app.listen(8000,()=>{
 })
 
 
+app.get('/', (req,res) => {
+    let message = req.query.message
+
+    res.render('login',{
+        message : message
+    })
+})
+
+app.post('/',async(req,res)=>{
+    let username = req.body.username
+    let password = req.body.password
+
+    let session = await business.attemptLogin(username, password)
+    if(session){
+        res.cookie('session', session.key, {expires: session.expiry})
+        res.redirect('/home')
+    }
+    else {
+        res.redirect('/?message=Invalid Credentials')
+    }
+})
+
+
 /**
  * Renders the home page with a list of all employees.
  * @route GET /
  * @param {import('express').Request} req - Express request object.
  * @param {import('express').Response} res - Express response object.
  */
-app.get('/', async (req, res) => {
+app.get('/home', async (req, res) => {
+
+    let sessionKey = req.cookies.session
+    if (!sessionKey) {
+        res.redirect("/?message=You must be logged in to see that page")
+        return
+    }
+    let sd = await business.getSession(sessionKey)
+    if (!sd) {
+        res.redirect("/?message=You must be logged in to see that page")
+        return
+    }
+
     let data = await business.getAllEmployees()
 
     res.render('home',{employees : data})
 })
+
+
 
 
 /**

@@ -1,4 +1,5 @@
 const persistence = require("./Persistence")
+const crypto = require('crypto')
 
 /**
  * Return a list of all employees loaded from the storage.
@@ -69,6 +70,30 @@ async function isMorning(shifts){
     }
 }
 
+async function attemptLogin(u, p) {
+    let details = await persistence.getUserDetails(u)
+    const hash = crypto.createHash('sha256').update(p).digest('hex')
+    console.log(hash)
+    if (details == undefined || details.password != hash) {
+        return undefined
+    }
+    
+    let sessionKey = crypto.randomUUID()
+    let sd = {
+        key: sessionKey,
+        expiry: new Date(Date.now() + 1000*60*5),
+        data: {
+            username: details.user
+        }
+    }
+
+    await persistence.startSession(sd)
+    return sd
+}
+async function getSession(key){
+    return persistence.getSession(key)
+}
+
 
 
 
@@ -79,5 +104,7 @@ module.exports ={
     findEmployee,
     findShift,
     isMorning,
-    updateDetails
+    updateDetails,
+    attemptLogin,
+    getSession
 }

@@ -1,143 +1,142 @@
-const {MongoClient} = require('mongodb')
+const { MongoClient, ObjectId } = require('mongodb')
 const client = new MongoClient('mongodb+srv://60307275:12class34@cluster0.atbir.mongodb.net/')
 
 async function connection(){
     await client.connect()
 }
 
-
 /**
- * Return a list of all employees loaded from the storage.
- * @returns {Array<{ employeeId: string, name: string, phone: string }>} List of employees
+ * Return a list of all employees loaded from the database.
+ * @returns {Promise<Array<{ _id: ObjectId, name: string, phone: string }>>}
  */
 async function getAllEmployees() {
     await connection()
     let db = client.db('infs3201_winter2026')
     let employees = db.collection('employees')
     let data = await employees.find().toArray()
-
     return data
 }
 
-
-
 /**
- * Find a single employee given their ID number.
- * @param {string} empId 
- * @returns {{ employeeId: string, name: string, phone: string }|undefined}
+ * Find a single employee given their MongoDB ObjectId.
+ * @param {string} empId - The string representation of the employee's ObjectId
+ * @returns {Promise<{ _id: ObjectId, name: string, phone: string }|null>}
  */
 async function findEmployee(empId) {
     await connection()
     let db = client.db('infs3201_winter2026')
     let employees = db.collection('employees')
-    let data = await employees.findOne({ employeeId: empId })
+    let data = await employees.findOne({ _id: new ObjectId(empId) })
     return data
 }
 
 /**
- * Get a single shift given the shiftId
- * @param {string} shiftId 
- * @returns {{shiftId:string, date:string, startTime:string, endTime:string}|undefined}
+ * Find a single shift given its MongoDB ObjectId.
+ * @param {string} shiftId - The string representation of the shift's ObjectId
+ * @returns {Promise<{ _id: ObjectId, date: string, startTime: string, endTime: string, employees: Array<ObjectId> }|null>}
  */
 async function findShift(shiftId) {
     await connection()
     let db = client.db('infs3201_winter2026')
-    let employees = db.collection('shifts')
-    let data = await employees.findOne({shiftId: shiftId })
-
+    let shifts = db.collection('shifts')
+    let data = await shifts.findOne({ _id: new ObjectId(shiftId) })
     return data
 }
+
+
+
 /**
- * Get a list of shiftIDs for an employee.
- * @param {string} empId 
- * @returns {Array<{string}>}
+ * Get all shifts that a given employee is assigned to by searching
+ * the embedded employees array inside each shift document.
+ * @param {string} empId - The string representation of the employee's ObjectId
+ * @returns {Promise<Array<{ _id: ObjectId, date: string, startTime: string, endTime: string, employees: Array<ObjectId> }>>}
  */
 async function getEmployeeShifts(empId) {
     await connection()
     let db = client.db('infs3201_winter2026')
-    let assignments = db.collection('assignments')
     let shifts = db.collection('shifts')
-
-    let employeeAssignments = await assignments.find({ employeeId: empId }).toArray()
-
-    let shiftIds = []
-    for (let a of employeeAssignments) {
-        shiftIds.push(a.shiftId)
-    }
-
-    if (shiftIds.length === 0) {
-        return []
-    }
-    let shiftDetails = await shifts.find({ shiftId: { $in: shiftIds } }).toArray()
-    return shiftDetails
-
+    let data = await shifts.find({ employees: new ObjectId(empId) }).toArray()
+    return data
 }
 
+
 /**
- * Find a shift object give the employeeId and the shiftId.
- * @param {string} empId 
- * @param {string} shiftId 
- * @returns {{employeeId:string, shiftId:string}|undefined}
+ * Find a shift object given the employee ObjectId and the shift ObjectId.
+ * Used to check if an assignment already exists.
+ * @param {string} empId - The string representation of the employee's ObjectId
+ * @param {string} shiftId - The string representation of the shift's ObjectId
+ * @returns {Promise<{ _id: ObjectId, date: string, startTime: string, endTime: string, employees: Array<ObjectId> }|null>}
  */
-
 async function findAssignment(empId, shiftId) {
-    
     await connection()
-
-    const db = client.db('infs3201_winter2026')
-    const assignments = db.collection('assignments')
-
-    const result = await assignments.findOne({
-        employeeId: empId,
-        shiftId: shiftId
+    let db = client.db('infs3201_winter2026')
+    let shifts = db.collection('shifts')
+    let result = await shifts.findOne({
+        _id: new ObjectId(shiftId),
+        employees: new ObjectId(empId)
     })
-    
-    return result   
+    return result
 }
 
 
 /**
- * Add a new employee record to the system. The empId is automatically generated based
- * on the next available ID number from what is already in the file.
- * @param {{name:string, phone:string}} emp 
+ * Add a new employee record to the database.
+ * No employeeId is generated - MongoDB assigns an ObjectId automatically.
+ * @param {{ name: string, phone: string }} emp - Employee object without an id field
+ * @returns {Promise<void>}
  */
 async function addEmployeeRecord(emp) {
     await connection()
-
     let db = client.db('infs3201_winter2026')
     let employees = db.collection('employees')
-
-    let employeeList = await employees.find().toArray()
-
-    let maxId = 0
-
-    for (let e of employeeList) {
-        let eid = Number(e.employeeId.slice(1))
-        if (eid > maxId) {
-            maxId = eid
-        }
-    }
-
-    emp.employeeId = `E${String(maxId + 1).padStart(3, '0')}`
-
     await employees.insertOne(emp)
 }
 
 
 /**
  * Updates an employee's name and phone number in the database.
- * * @param {string|number} eid - The unique identifier of the employee to update.
- * @param {string} newName - The new name to be assigned to the employee.
- * @param {string|number} newPhone - The new phone number to be assigned to the employee.
- * @returns {Promise<void>} - A promise that resolves when the update operation is complete.
+ * Looks up the employee by their MongoDB ObjectId.
+ * @param {string} empId - The string representation of the employee's ObjectId
+ * @param {string} newName - The new name to assign to the employee
+ * @param {string} newPhone - The new phone number to assign to the employee
+ * @returns {Promise<void>}
  */
-async function updateDetails(eid,newName,newPhone){
+async function updateDetails(empId, newName, newPhone){
     await connection()
     let db = client.db('infs3201_winter2026')
     let employees = db.collection('employees')
-    employees.updateOne({employeeId : eid}, {$set : {name : newName , phone : newPhone}})
-
+    await employees.updateOne(
+        { _id: new ObjectId(empId) },
+        { $set: { name: newName, phone: newPhone } }
+    )
 }
+
+
+
+async function getUserDetails(username){
+    await connection()
+    let db = client.db('infs3201_winter2026')
+    let users = db.collection('users')
+
+    let result = await users.findOne({username : username})
+    return result
+}
+
+async function startSession(sd) {
+    await connection()
+    let db = client.db('infs3201_winter2026')
+    let session = db.collection('session')
+    await session.insertOne(sd)
+}
+
+async function getSession(key) {
+    await connection()
+    let db = client.db('infs3201_winter2026')
+    let session = db.collection('session')
+    let result = await session.findOne({key: key})
+    return result
+}
+
 
 
 module.exports = {
@@ -147,5 +146,8 @@ module.exports = {
     getAllEmployees,
     getEmployeeShifts,
     addEmployeeRecord,
-    updateDetails
+    updateDetails,
+    getUserDetails,
+    startSession,
+    getSession
 }

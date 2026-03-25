@@ -1,0 +1,134 @@
+A4 Refactor Plan - INFS3201 Assignment 4
+==========================================
+
+1. COLLECTIONS THAT WILL CHANGE
+---------------------------------
+
+employees:
+- Remove the employeeId field (e.g. "E001")
+- _id (ObjectId) will now be the sole identifier
+
+shifts:
+- Remove the shiftId field (e.g. "S001")
+- Add a new "employees" array field containing ObjectIds referencing employee documents
+- _id (ObjectId) will now be the sole identifier
+
+assignments:
+- This collection will be deleted entirely
+- Its relationship data will be embedded into the shifts collection as the employees array
+
+
+2. PERSISTENCE FUNCTIONS TO MODIFY OR REMOVE
+----------------------------------------------
+
+getEmployees()
+- No longer queries by employeeId
+- Must use _id (ObjectId) for lookups
+
+getEmployeeById()
+- Parameter changes from employeeId string (e.g. "E001") to MongoDB ObjectId
+- Must wrap incoming id string with: new mongodb.ObjectId(id)
+
+addEmployee()
+- Remove any logic that generates or stores employeeId
+
+updateEmployee()
+- Change query filter from { employeeId } to { _id: new mongodb.ObjectId(id) }
+
+deleteEmployee()
+- Change query filter from { employeeId } to { _id: new mongodb.ObjectId(id) }
+
+getShifts()
+- No longer queries by shiftId
+- Must use _id (ObjectId) for lookups
+
+getShiftById()
+- Parameter changes from shiftId string to MongoDB ObjectId
+- Must wrap incoming id string with: new mongodb.ObjectId(id)
+
+addShift()
+- Remove any logic that generates or stores shiftId
+- Must initialize an empty employees array on creation: employees: []
+
+updateShift()
+- Change query filter from { shiftId } to { _id: new mongodb.ObjectId(id) }
+
+deleteShift()
+- Change query filter from { shiftId } to { _id: new mongodb.ObjectId(id) }
+
+getAssignmentsForShift() - REMOVE
+- No longer needed, employees are embedded directly in the shift document
+
+addAssignment() - REFACTOR
+- Instead of inserting into assignments collection, use $push to add
+  employee ObjectId into the shift's employees array:
+  shifts.updateOne({ _id: shiftObjectId }, { $push: { employees: employeeObjectId } })
+
+removeAssignment() - REFACTOR
+- Instead of deleting from assignments collection, use $pull to remove
+  employee ObjectId from the shift's employees array:
+  shifts.updateOne({ _id: shiftObjectId }, { $pull: { employees: employeeObjectId } })
+
+
+3. BUSINESS LOGIC CHANGES
+---------------------------
+
+- Any business logic that joins employees and shifts via the assignments
+  collection must be rewritten to look up the employees array inside each shift
+
+- To get full employee details for a shift, fetch the shift document first,
+  then look up each ObjectId in the employees array from the employees collection
+
+- All route parameters that previously passed employeeId/shiftId strings
+  must now pass the _id string and be converted to ObjectId in persistence layer
+
+
+4. HOW EMBEDDED ARRAYS AFFECT UPDATE OPERATIONS
+-------------------------------------------------
+
+- Adding an employee to a shift: use $push operator
+  db.collection('shifts').updateOne(
+    { _id: shiftObjectId },
+    { $push: { employees: employeeObjectId } }
+  )
+
+- Removing an employee from a shift: use $pull operator
+  db.collection('shifts').updateOne(
+    { _id: shiftObjectId },
+    { $pull: { employees: employeeObjectId } }
+  )
+
+- Checking if an employee is already assigned: query with $elemMatch or $in
+  db.collection('shifts').findOne(
+    { _id: shiftObjectId, employees: employeeObjectId }
+  )
+
+- Deleting an employee: must also $pull their ObjectId from all shifts
+  db.collection('shifts').updateMany(
+    {},
+    { $pull: { employees: employeeObjectId } }
+  )
+
+
+5. RISKS AND COMPLICATIONS
+---------------------------
+
+- ObjectId vs String mismatch: the most likely source of bugs. Any id coming
+  from a URL parameter or form is a plain string and must be converted with
+  new mongodb.ObjectId(id) before querying. Forgetting this will silently
+  return no results instead of throwing an error.
+
+- Partial migration: if transform_db.js fails halfway, the database may be in
+  a mixed state. Always back up all three collections in Compass before running
+  the transformation script.
+
+- Duplicate assignments: the $push operator does not check for duplicates.
+  Before pushing an employee ObjectId into a shift, check if it already exists
+  in the array to avoid assigning the same employee twice.
+
+- Cascading deletes: deleting an employee no longer automatically cleans up
+  assignments since there is no assignments collection. The delete employee
+  function must manually $pull the employee ObjectId from all shift documents.
+
+- Frontend id references: any HTML forms or links that use employeeId/shiftId
+  values must be updated to use the MongoDB _id values instead.

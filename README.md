@@ -1,4 +1,5 @@
-usernames      passwords
+usernames   ||   passwords
 
-alice          password123
-bob            securepass456
+alice      ----    password123,
+
+bob        ----    securepass456

@@ -18,27 +18,91 @@ app.listen(8000,()=>{
 })
 
 
-app.get('/', (req,res) => {
+
+//security log
+app.use(async (req, res, next) => {
+    
+    if (req.method === 'POST' && req.url === '/login') {
+        next()
+        return
+    }
+
+    let sessionKey = req.cookies.session
+    let username = undefined
+    if (sessionKey) {
+        let sd = await business.getSession(sessionKey)
+        if (sd) {
+            username = sd.data.username
+        }
+    }
+    await business.logAccess({
+        timestamp: new Date(),
+        username: username,
+        url: req.url,
+        method: req.method
+    })
+    next()
+})
+
+
+
+
+app.get('/login', (req,res) => {
     let message = req.query.message
 
     res.render('login',{
-        message : message
+        message : message || null
     })
 })
 
-app.post('/',async(req,res)=>{
+app.post('/login', async (req, res) => {
     let username = req.body.username
     let password = req.body.password
 
     let session = await business.attemptLogin(username, password)
-    if(session){
-        res.cookie('session', session.key, {expires: session.expiry})
-        res.redirect('/home')
-    }
-    else {
-        res.redirect('/?message=Invalid Credentials')
+    
+    
+    await business.logAccess({
+        timestamp: new Date(),
+        username: username,
+        url: '/login',
+        method: 'POST'
+    })
+
+    if (session) {
+        res.cookie('session', session.key, { expires: session.expiry })
+        res.redirect('/')
+    } else {
+        res.redirect('/login?message=Invalid Credentials')
     }
 })
+
+app.get('/logout', async(req,res)=>{
+    await business.terminateSession(req.cookies.session)
+    res.clearCookie('session')
+    res.redirect('/login')
+})
+
+//Middleware for authentication
+async function authMiddleware(req, res, next) {
+    let sessionKey = req.cookies.session
+    if (!sessionKey) {
+        res.redirect('/login')
+        return
+    }
+    let sd = await business.getSession(sessionKey)
+    if (!sd) {
+        res.redirect('/login?message=You must be logged in to see that page')
+        return
+    }
+    // Extend session by 5 minutes on every visit
+    await business.extendSession(sessionKey)
+    next()
+}
+app.use(['/','/employee/:id','/edit-details/:id','/confirmation'], authMiddleware)
+
+
+//Protected routes
 
 
 /**
@@ -47,22 +111,9 @@ app.post('/',async(req,res)=>{
  * @param {import('express').Request} req - Express request object.
  * @param {import('express').Response} res - Express response object.
  */
-app.get('/home', async (req, res) => {
-
-    let sessionKey = req.cookies.session
-    if (!sessionKey) {
-        res.redirect("/?message=You must be logged in to see that page")
-        return
-    }
-    let sd = await business.getSession(sessionKey)
-    if (!sd) {
-        res.redirect("/?message=You must be logged in to see that page")
-        return
-    }
-
+app.get('/', async (req, res) => {
     let data = await business.getAllEmployees()
-
-    res.render('home',{employees : data})
+    res.render('home', { employees: data })
 })
 
 

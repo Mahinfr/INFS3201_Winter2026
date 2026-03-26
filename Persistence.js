@@ -113,6 +113,11 @@ async function updateDetails(empId, newName, newPhone){
 
 
 
+/**
+ * Retrieves a user's details from the users collection by their username.
+ * @param {string} username - The username to search for
+ * @returns {Promise<{ _id: ObjectId, username: string, password: string }|null>}
+ */
 async function getUserDetails(username){
     await connection()
     let db = client.db('infs3201_winter2026')
@@ -122,6 +127,11 @@ async function getUserDetails(username){
     return result
 }
 
+/**
+ * Inserts a new session document into the session collection.
+ * @param {{ key: string, expiry: Date, data: { username: string } }} sd - The session object to store
+ * @returns {Promise<void>}
+ */
 async function startSession(sd) {
     await connection()
     let db = client.db('infs3201_winter2026')
@@ -129,12 +139,56 @@ async function startSession(sd) {
     await session.insertOne(sd)
 }
 
+/**
+ * Retrieves a session document from the session collection by its key.
+ * @param {string} key - The unique session key to search for
+ * @returns {Promise<{ key: string, expiry: Date, data: { username: string } }|null>}
+ */
 async function getSession(key) {
     await connection()
     let db = client.db('infs3201_winter2026')
     let session = db.collection('session')
     let result = await session.findOne({key: key})
     return result
+}
+
+/**
+ * Deletes a session document from the session collection by its key.
+ * @param {string} key - The unique session key of the session to delete
+ * @returns {Promise<void>}
+ */
+async function terminateSession(key){
+    await connection()
+    let db = client.db('infs3201_winter2026')
+    let session = db.collection('session')
+    await session.deleteOne({key:key})
+}
+/**
+ * Extends the expiry of an existing session by 5 minutes from the current time.
+ * Looks up the session by its key and updates the expiry field.
+ * @param {string} sessionKey - The unique session key to extend
+ * @returns {Promise<void>}
+ */
+async function extendSession(sessionKey) {
+    await connection()
+    let db = client.db('infs3201_winter2026')
+    let sessions = db.collection('sessions')
+    await sessions.updateOne(
+        { key: sessionKey },
+        { $set: { expiry: new Date(Date.now() + 1000 * 60 * 5) } }
+    )
+}
+
+/**
+ * Inserts a new entry into the security_log collection.
+ * @param {{ timestamp: Date, username: string|undefined, url: string, method: string }} entry
+ * @returns {Promise<void>}
+ */
+async function logAccess(entry) {
+    await connection()
+    let db = client.db('infs3201_winter2026')
+    let log = db.collection('security_log')
+    await log.insertOne(entry)
 }
 
 
@@ -149,5 +203,8 @@ module.exports = {
     updateDetails,
     getUserDetails,
     startSession,
-    getSession
+    getSession,
+    terminateSession,
+    extendSession,
+    logAccess
 }

@@ -87,10 +87,49 @@ async function isMorning(shifts){
 async function attemptLogin(u, p) {
     let details = await persistence.getUserDetails(u)
     const hash = crypto.createHash('sha256').update(p).digest('hex')
-    if (details == undefined || details.password != hash) {
-        return undefined
+
+    if(!details) return{status : 'invalid'}
+    if(details.locked) return{status : 'locked'}
+
+    if (details.password != hash) {
+        let attempts = (details.failedAttempts || 0) + 1
+        let locked = attempts >= 10
+
+        await persistence.updateLoginAttempts(u, attempts, locked)
+
+        if(locked){
+            await sendAccountLockedEmail.sendAccountLockedEmail(details.email) /// no email field created in mongodb yet
+            return {status : 'locked'}
+        }
+        if (attempts === 3) {
+            await email.sendSuspiciousActivityEmail(details.email)
+        }
+        return { status: 'invalid' }
     }
-    
+
+    // Credentials correct, reset attempts and send 2FA
+    await persistence.updateLoginAttempts(u, 0, false)
+
+    let code = Math.floor(100000 + Math.random() * 900000).toString()
+    let expiry = new Date(Date.now() + 1000 * 60 * 3) // 3 minutes
+    await persistence.store2FACode(u, code, expiry)
+    await email.send2FACode(details.email, code)
+
+    return { status: 'pending_2fa', username: u }
+}
+
+
+async function verify2FA(u, enteredCode){
+    let record = persistence.get2FACode(u)
+    if(!record) return {error: 'No Pending 2FA found'}
+    if(new Date() > record.expiry){
+        await persistence.delete2FACode(u)
+        return {error : 'Code expired'}
+    }
+    if (record.code !== enteredCode) return {error : 'Invalid code'}
+
+    await persistence.delete2FACode(u)
+
     let sessionKey = crypto.randomUUID()
     let sd = {
         key: sessionKey,
@@ -154,5 +193,6 @@ module.exports ={
     getSession,
     terminateSession,
     extendSession,
-    logAccess
+    logAccess,
+    verify2FA
 }

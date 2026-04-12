@@ -1,5 +1,5 @@
 const { MongoClient, ObjectId } = require('mongodb')
-const client = new MongoClient('mongodb+srv://60307275:12class34@cluster0.atbir.mongodb.net/')
+const client = new MongoClient('mongodb://mahin1738_db_user:12class34@ac-jj6qkc8-shard-00-00.ivspu6f.mongodb.net:27017,ac-jj6qkc8-shard-00-01.ivspu6f.mongodb.net:27017,ac-jj6qkc8-shard-00-02.ivspu6f.mongodb.net:27017/?ssl=true&replicaSet=atlas-ggfa4e-shard-0&authSource=admin&appName=Cluster0')
 
 async function connection(){
     await client.connect()
@@ -192,6 +192,69 @@ async function logAccess(entry) {
 }
 
 
+//////////Assignmet 5 functions
+
+/**
+ * Updates the failed login attempt count and locked status for a user.
+ * @param {string} username
+ * @param {number} attempts
+ * @param {boolean} locked
+ * @returns {Promise<void>}
+ */
+async function updateLoginAttempts(username, attempts, locked) {
+  await connection()
+  let db = client.db('infs3201_winter2026')
+  let users = db.collection('users')
+  await users.updateOne(
+    { username },
+    { $set: { failedAttempts: attempts, locked } }
+  )
+}
+
+/**
+ * Stores a pending 2FA code with expiry for a username.
+ * @param {string} username
+ * @param {string} code
+ * @param {Date} expiry
+ * @returns {Promise<void>}
+ */
+async function store2FACode(username, code, expiry) {
+  await connection()
+  let db = client.db('infs3201_winter2026')
+  let pending = db.collection('pending_2fa')
+  // Upsert so there's only one pending code per user at a time
+  await pending.updateOne(
+    { username },
+    { $set: { username, code, expiry } },
+    { upsert: true }
+  )
+}
+
+/**
+ * Retrieves the pending 2FA record for a username.
+ * @param {string} username
+ * @returns {Promise<{ username: string, code: string, expiry: Date }|null>}
+ */
+async function get2FACode(username) {
+  await connection()
+  let db = client.db('infs3201_winter2026')
+  let pending = db.collection('pending_2fa')
+  return await pending.findOne({ username })
+}
+
+/**
+ * Deletes the pending 2FA record for a username.
+ * @param {string} username
+ * @returns {Promise<void>}
+ */
+async function delete2FACode(username) {
+  await connection()
+  let db = client.db('infs3201_winter2026')
+  let pending = db.collection('pending_2fa')
+  await pending.deleteOne({ username })
+}
+
+
 
 module.exports = {
     findAssignment,
@@ -206,5 +269,9 @@ module.exports = {
     getSession,
     terminateSession,
     extendSession,
-    logAccess
+    logAccess,
+    updateLoginAttempts,
+    store2FACode,
+    get2FACode,
+    delete2FACode
 }

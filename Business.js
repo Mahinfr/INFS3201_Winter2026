@@ -1,4 +1,5 @@
 const persistence = require("./Persistence")
+const emailSystem = require("./emailSystem")
 const crypto = require('crypto')
 
 /**
@@ -98,11 +99,11 @@ async function attemptLogin(u, p) {
         await persistence.updateLoginAttempts(u, attempts, locked)
 
         if(locked){
-            await sendAccountLockedEmail.sendAccountLockedEmail(details.email) /// no email field created in mongodb yet
+            await emailSystem.sendAccountLockedEmail(details.email) /// no email field created in mongodb yet
             return {status : 'locked'}
         }
         if (attempts === 3) {
-            await email.sendSuspiciousActivityEmail(details.email)
+            await emailSystem.sendSuspiciousActivityEmail(details.email)
         }
         return { status: 'invalid' }
     }
@@ -112,15 +113,16 @@ async function attemptLogin(u, p) {
 
     let code = Math.floor(100000 + Math.random() * 900000).toString()
     let expiry = new Date(Date.now() + 1000 * 60 * 3) // 3 minutes
+
     await persistence.store2FACode(u, code, expiry)
-    await email.send2FACode(details.email, code)
+    await emailSystem.send2FACode(details.email, code)
 
     return { status: 'pending_2fa', username: u }
 }
 
 
 async function verify2FA(u, enteredCode){
-    let record = persistence.get2FACode(u)
+    let record = await persistence.get2FACode(u)
     if(!record) return {error: 'No Pending 2FA found'}
     if(new Date() > record.expiry){
         await persistence.delete2FACode(u)
@@ -135,7 +137,7 @@ async function verify2FA(u, enteredCode){
         key: sessionKey,
         expiry: new Date(Date.now() + 1000*60*5),
         data: {
-            username: details.username
+            username: u
         }
     }
 
@@ -179,6 +181,40 @@ async function logAccess(entry) {
     return persistence.logAccess(entry)
 }
 
+/**
+ * Retrieves all document records associated with a specific employee from the database.
+ * * @async
+ * @param {string} empId - The unique identifier of the employee.
+ * @returns {Promise<Array<Object>>} A promise that resolves to an array of document objects.
+ */
+async function getDocumentsByEmployee(empId) {
+    return persistence.getDocumentsByEmployee(empId)
+}
+
+
+/**
+ * Saves a new document record metadata into the documents collection.
+ * * @async
+ * @param {Object} doc - The document record object.
+ * @param {string} doc.empId - ID of the employee the document belongs to.
+ * @param {string} doc.filename - The unique generated filename stored on the filesystem.
+ * @param {string} doc.originalname - The original name of the file uploaded by the user.
+ * @param {Date} doc.uploadedAt - The timestamp when the document was saved.
+ * @returns {Promise<Object>} A promise that resolves to the result of the insert operation.
+ */
+async function saveDocumentRecord(doc) {
+    return persistence.saveDocumentRecord(doc)
+}
+
+/**
+ * Retrieves a single document record by its unique system-generated filename.
+ * * @async
+ * @param {string} name - The unique filename to search for.
+ * @returns {Promise<Object|null>} A promise that resolves to the document object if found, or null.
+ */
+async function getDocumentByFilename(name) {
+    return persistence.getDocumentByFilename(name)
+}
 
 
 module.exports ={
@@ -194,5 +230,9 @@ module.exports ={
     terminateSession,
     extendSession,
     logAccess,
-    verify2FA
+    verify2FA,
+    getDocumentsByEmployee,
+    saveDocumentRecord,
+    getDocumentByFilename
+
 }

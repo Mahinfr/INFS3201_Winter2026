@@ -55,11 +55,13 @@ async function getEmployeeShifts(empId) {
     await connection()
     let db = client.db('infs3201_winter2026')
     let shifts = db.collection('shifts')
-    let data = await shifts.find({ employees: new ObjectId(empId) }).toArray()
+    let data = await shifts.find({ assignedEmployees: new ObjectId(empId) }).toArray()
+    
+    
     return data
 }
 
-
+getEmployeeShifts('69d95f585ee1a4258370ec36')
 /**
  * Find a shift object given the employee ObjectId and the shift ObjectId.
  * Used to check if an assignment already exists.
@@ -255,6 +257,50 @@ async function delete2FACode(username) {
 }
 
 
+/**
+ * Retrieves all document records associated with a specific employee from the database.
+ * * @async
+ * @param {string} empId - The unique identifier of the employee.
+ * @returns {Promise<Array<Object>>} A promise that resolves to an array of document objects.
+ */
+async function getDocumentsByEmployee(empId) {
+    await connection()
+    let db = client.db('infs3201_winter2026')
+    return await db.collection('documents')
+        .find({ empId: empId })
+        .toArray()
+}
+
+/**
+ * Saves a new document record metadata into the documents collection.
+ * * @async
+ * @param {Object} doc - The document record object.
+ * @param {string} doc.empId - ID of the employee the document belongs to.
+ * @param {string} doc.filename - The unique generated filename stored on the filesystem.
+ * @param {string} doc.originalname - The original name of the file uploaded by the user.
+ * @param {Date} doc.uploadedAt - The timestamp when the document was saved.
+ * @returns {Promise<Object>} A promise that resolves to the result of the insert operation.
+ */
+async function saveDocumentRecord(doc) {
+    await connection()
+    let db = client.db('infs3201_winter2026')
+    return await db.collection('documents').insertOne(doc)
+}
+
+/**
+ * Retrieves a single document record by its unique system-generated filename.
+ * * @async
+ * @param {string} name - The unique filename to search for.
+ * @returns {Promise<Object|null>} A promise that resolves to the document object if found, or null.
+ */
+async function getDocumentByFilename(name) {
+    await connection()
+    let db = client.db('infs3201_winter2026')
+    let documents = db.collection('documents')
+
+    let doc = await documents.findOne({ filename: name })
+    return doc
+}
 
 module.exports = {
     findAssignment,
@@ -273,5 +319,8 @@ module.exports = {
     updateLoginAttempts,
     store2FACode,
     get2FACode,
-    delete2FACode
+    delete2FACode,
+    getDocumentsByEmployee,
+    saveDocumentRecord,
+    getDocumentByFilename
 }

@@ -34,6 +34,8 @@ async function send2FACode(toEmail, code) {
     html: `<p>Your login verification code is: <strong>${code}</strong></p>
            <p>This code expires in 3 minutes.</p>`
   })
+
+  console.log(`2Fa sent ${code}`)
 }
 
 /**

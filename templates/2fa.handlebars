@@ -1,0 +1,6 @@
+<h1>Enter 2FA Code</h1>
+{{#if message}}<p style="color:red">{{message}}</p>{{/if}}
+<form method="POST" action="/2fa">
+  <input type="text" name="code" id="code" placeholder="6-digit code" maxlength="6" required>
+  <button type="submit">Verify</button>
+</form>

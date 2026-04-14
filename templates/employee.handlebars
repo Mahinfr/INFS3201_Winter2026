@@ -32,5 +32,24 @@
     {{/each}}
 </table>
 
+<h2>Upload Document</h2>
+
+<form action="/employee/{{employee._id}}/documents" method="POST" enctype="multipart/form-data">
+    <input type="file" name="document" required>
+    <button type="submit">Upload</button>
+</form>
+
+<h2>Documents</h2>
+
+<ul>
+    {{#each documents}}
+        <li>
+            <a href="/documents/{{this.filename}}" target="_blank">
+                {{this.originalname}}
+            </a>
+        </li>
+    {{/each}}
+</ul>
+
 <a href="/">Back</a>
 
